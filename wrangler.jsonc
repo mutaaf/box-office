@@ -1,0 +1,13 @@
+// Box Office: one analytics loader + first-party PostHog relay for every app. See AGENTS.md.
+{
+  "name": "box-office",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": false,
+  "preview_urls": false,
+  "observability": { "enabled": true },
+  "services": [{ "binding": "CAST", "service": "cast-list" }],
+  "routes": [
+    { "pattern": "mutaafaziz.com/boxoffice/*", "zone_name": "mutaafaziz.com" }
+  ]
+}

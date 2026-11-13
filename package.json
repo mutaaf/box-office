@@ -1,0 +1,16 @@
+{
+  "name": "box-office",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Box Office: analytics for every app at mutaafaziz.com on PostHog's free tier. Kids apps are never tracked.",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "wrangler dev",
+    "test": "vitest run",
+    "check": "vitest run",
+    "deploy": "wrangler deploy",
+    "up": "npm install && wrangler dev"
+  },
+  "devDependencies": { "vitest": "^4.1.11", "wrangler": "^4.161.0" }
+}
