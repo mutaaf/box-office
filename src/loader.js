@@ -36,7 +36,7 @@ export function loader(entries, origin) {
     if (d.release) props.release = d.release;
     ph.init('${TOKEN}', {
       api_host: api, ui_host: 'https://us.posthog.com',
-      person_profiles: 'identified_only', persistence: 'localStorage',
+      person_profiles: 'always', persistence: 'localStorage',
       capture_pageview: 'history_change', capture_pageleave: true,
       autocapture: true, enable_heatmaps: true, capture_performance: true,
       session_recording: { maskAllInputs: true, maskTextSelector: '[data-private]' },

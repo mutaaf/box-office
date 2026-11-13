@@ -33,7 +33,7 @@ Amazon link clicks) is captured automatically.
    audience, or a URL no app claims → the loader is a no-op, and the relay drops the event using the
    page's Referer, so a stale or copied tag still can't send data. Never add Box Office to a kids app.
 2. **No full IP reaches PostHog.** The relay forwards the client IP truncated to /24 or /48 for city-level
-   location. Cookies are stripped both ways. Persistence is localStorage, person profiles only on identify.
+   location. Cookies are stripped both ways. Persistence is localStorage. Anonymous person profiles are on (needed for cohorts, retention, returning-visitor segments); nobody is ever identified by name or email.
 3. **Global Privacy Control and Do Not Track are honoured** (no load at all).
 4. **Session replay masks every input**, plus anything marked `data-private`.
 5. **Never break a page.** Any error serves a no-op loader; the relay answers 200 on failure.
@@ -50,3 +50,12 @@ are properties, not projects: filter or break down by `app`, `surface`, `$geoip_
 
 `npm run up` (dev), `npm test`, `npm run deploy`. Free-plan note: every relay call is a Worker request
 and shares the account's 100k/day with the other Workers.
+
+## PostHog objects (project 732590)
+
+- Dashboard "Portfolio" (2346342, pinned): visitors by app, world map, top cities, US states, referrers,
+  devices, top pages, store taps, game starts vs game overs, weekly actives by surface.
+- "App · <name>" dashboards (2346345–2346357): the same tiles with a dashboard filter `app = <slug>`.
+  A new app: duplicate Portfolio and set that filter.
+- Cohorts: Players (started a game), Store tappers, Returning visitors (3+ days in 30).
+- Test-account filter drops localhost and anything with a `smoke` property (relay smoke tests).
