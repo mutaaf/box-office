@@ -37,8 +37,16 @@ Amazon link clicks) is captured automatically.
 3. **Global Privacy Control and Do Not Track are honoured** (no load at all).
 4. **Session replay masks every input**, plus anything marked `data-private`.
 5. **Never break a page.** Any error serves a no-op loader; the relay answers 200 on failure.
-6. Native apps: not until the App Store reviews of Nov 2026 have cleared, and only with the App Privacy
-   label updated in the same submission.
+6. **Native apps: only with the owner's yes for that app, and only with its App Privacy label updated in the
+   same submission.** The owner said yes for Cold Gas's iPhone app on 2026-11-13 ("iPhone app metrics too";
+   this replaces the earlier "not until the App Store reviews of Nov 2026 have cleared"). How a native app
+   sends, with no change here: no SDK and no loader; it POSTs PostHog's `/batch/` shape to
+   `https://mutaafaziz.com/boxoffice/e/batch/` with the public key and `Referer:` its own general-audience
+   Cast List page (so rule 1 decides it like any page), `platform: "ios"`, `$geoip_disable: true` (no
+   location on the label). A random install id kept on the device is the only id; no IDFA, no ATT prompt, no
+   fingerprinting, no replays or autocapture; batched, off the frame loop; an in-app switch turns it off. Its
+   label: Usage Data → Product Interaction and Identifiers → Device ID, Analytics, linked, not tracking.
+   Every other native app still needs its own yes. Kids apps never (rule 1).
 
 ## Dashboards
 
