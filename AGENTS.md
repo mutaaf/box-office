@@ -46,7 +46,9 @@ Amazon link clicks) is captured automatically.
    location on the label). A random install id kept on the device is the only id; no IDFA, no ATT prompt, no
    fingerprinting, no replays or autocapture; batched, off the frame loop; an in-app switch turns it off. Its
    label: Usage Data → Product Interaction and Identifiers → Device ID, Analytics, linked, not tracking.
-   Every other native app still needs its own yes. Kids apps never (rule 1).
+   On 2026-11-16 the owner said yes for every native app ("update the native apps too"): Hearth, Hinge Pop, 17-0 and
+   Fantasy Edge follow Cold Gas's design, each from its next version after the one in review. Kids apps never (rule 1):
+   Moon Club and KIN send nothing.
 
 ## Dashboards
 
