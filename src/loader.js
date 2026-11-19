@@ -44,6 +44,9 @@ export function loader(entries, origin) {
       loaded: function (p) { p.register(props); }
     });
     ph.register(props);
+    // window.posthog, read at each call: array.js replaces the stub with the real instance when it
+    // loads, and anything still sent to the stub after that is never read (every event after load was lost)
+    function capture(e, p) { (window.posthog && window.posthog.capture ? window.posthog : ph).capture(e, p); }
     function store(href) {
       return /apps\\.apple\\.com/.test(href) ? 'app_store' : /play\\.google\\.com/.test(href) ? 'google_play'
         : /testflight\\.apple\\.com/.test(href) ? 'testflight' : /amazon\\.com\\/.*(dp|gp\\/mas)/.test(href) ? 'amazon' : '';
@@ -52,9 +55,9 @@ export function loader(entries, origin) {
       var a = ev.target && ev.target.closest && ev.target.closest('a[href]');
       if (!a) return;
       var st = store(a.href);
-      if (st) ph.capture('store_tap', { store: st, href: a.href });
+      if (st) capture('store_tap', { store: st, href: a.href });
     }, true);
-    var api2 = { v: 1, on: true, app: app[2], track: function (e, p) { ph.capture(e, p || {}); } };
+    var api2 = { v: 1, on: true, app: app[2], track: function (e, p) { capture(e, p || {}); } };
     window.boxoffice = api2;
     for (i = 0; i < q.length; i++) api2.track.apply(null, q[i]);
   } catch (e) { window.boxoffice = noop; }

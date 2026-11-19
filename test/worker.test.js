@@ -80,6 +80,18 @@ describe('loader', () => {
       expect(appended).toHaveLength(0);
     }
   });
+  it('sends events made after the library loads (it replaces window.posthog; the stub is never read again)', () => {
+    const { window, listeners } = runLoader('https://mutaafaziz.com/coldgas/');
+    window.boxoffice.track('game_start', { level: 1 });            // before the library: queued on the stub
+    const stub = window.posthog;
+    const got = [];
+    window.posthog = { capture: (e, p) => got.push([e, p]) };      // what array.js does once it loads
+    window.boxoffice.track('game_over', { score: 9 });
+    const click = listeners.find((l) => l[0] === 'click')[1];
+    click({ target: { closest: () => ({ href: 'https://apps.apple.com/app/id1' }) } });
+    expect(stub.filter((c) => c[0] === 'capture').map((c) => c[1])).toEqual(['game_start']);
+    expect(got).toEqual([['game_over', { score: 9 }], ['store_tap', { store: 'app_store', href: 'https://apps.apple.com/app/id1' }]]);
+  });
   it('honours Global Privacy Control', () => {
     const { window, appended } = runLoader('https://mutaafaziz.com/coldgas/', { gpc: true });
     expect(window.boxoffice.on).toBe(false);
