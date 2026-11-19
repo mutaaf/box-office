@@ -10,7 +10,9 @@
   // Per truncated-IP (/24 or /48) ceiling on relay posts. Over it, events are dropped with a 200 (never break a page).
   "ratelimits": [{ "name": "RATE", "namespace_id": "4201", "simple": { "limit": 600, "period": 60 } }],
   // One data point per request: route, outcome, app, method, country, colo, version | status, ms, upstream ms, bytes.
-  "analytics_engine_datasets": [{ "binding": "METRICS", "dataset": "box_office" }],
+  // Off until Analytics Engine is enabled on the account (dashboard → Workers → Analytics Engine, one click,
+  // free tier). The code skips metrics when the binding is missing. Then uncomment and deploy.
+  // "analytics_engine_datasets": [{ "binding": "METRICS", "dataset": "box_office" }],
   "vars": { "VERSION": "dev" },
   "routes": [
     { "pattern": "mutaafaziz.com/boxoffice/*", "zone_name": "mutaafaziz.com" }
