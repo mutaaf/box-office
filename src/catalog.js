@@ -44,3 +44,23 @@ export function appFor(entries, href) {
 export function trackable(entries, href) {
   return appFor(entries, href)?.audience === 'general';
 }
+
+/** host → that host's entries (already longest path first), so a lookup scans one host, not the catalog. */
+export function index(entries) {
+  const m = new Map();
+  for (const e of entries) {
+    const list = m.get(e.host);
+    if (list) list.push(e); else m.set(e.host, [e]);
+  }
+  return m;
+}
+
+/** Same answer as appFor, via the index. */
+export function lookup(idx, href) {
+  let u;
+  try { u = new URL(href); } catch { return null; }
+  const list = idx.get(u.hostname.replace(/^www\./, ''));
+  if (!list) return null;
+  const path = u.pathname.endsWith('/') ? u.pathname : u.pathname + '/';
+  return list.find((e) => path.startsWith(e.path)) ?? null;
+}

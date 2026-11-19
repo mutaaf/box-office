@@ -5,9 +5,9 @@ org "mutaafaziz.com", project "Portfolio", id 732590). One Worker on `mutaafaziz
 
 | Path | What |
 |---|---|
-| `/boxoffice/v1/insights.js` | The loader. Built from Cast List on each request (5 min cache). |
-| `/boxoffice/e/*` | First-party relay to PostHog: `/static/*` → us-assets.i.posthog.com, everything else → us.i.posthog.com |
-| `/boxoffice/health` | `{ok, apps, kids}`: which apps are tracked and which are refused |
+| `/boxoffice/v1/insights.js` | The loader. Rendered once per catalog version; ETag/304; `stale-while-revalidate` for a day. |
+| `/boxoffice/e/*` | First-party relay to PostHog. `/static/*`, `/array/*` → us-assets.i.posthog.com (edge-cached); `/e /i /s /flags /decide /batch /capture /engage /track /api/surveys` → us.i.posthog.com. Any other path 404, other methods 405. |
+| `/boxoffice/health` | `{ok, version, catalog:{source, age_s, etag}, apps, kids}`; `?deep=1` also probes PostHog and Cast List; 503 when degraded |
 
 ## Integrating an app (one line, last in `<body>`)
 
@@ -56,10 +56,45 @@ PostHog → Dashboards: "Portfolio" (all apps) and one per app, filtered by the 
 are properties, not projects: filter or break down by `app`, `surface`, `$geoip_country_name`,
 `$geoip_city_name`, `$device_type`, `$referring_domain`, `$initial_referring_domain`.
 
+## Speed
+
+The catalog lives in each isolate and refreshes from Cast List in the background after 5 minutes
+(stale-while-revalidate, single flight, 2.5 s timeout). The last good copy is also kept in the colo's edge
+cache, so a new isolate starts from it instead of waiting on Cast List. Only the first request in a colo
+that has never seen the catalog waits. With nothing at all, the built-in kids list is used (fail closed:
+nothing is tracked) and `/health` says `fallback` with a 503. `npm run bench` compares against an older
+commit in-process (`node scripts/bench.mjs <ref>`); at this change: new isolate 151 ms → 0.45 ms, first
+request after the 5-minute expiry 151 ms → 0.05 ms. A forwarded event costs whatever PostHog takes.
+
+## Hardening
+
+- Path allowlist and method allowlist (above): the relay is not an open proxy to PostHog's API.
+  `authorization`, cookies and every forwarding header are stripped.
+- Bodies over 10 MB (by Content-Length) are dropped. Rate limit: 600 requests a minute per truncated IP
+  (`RATE` binding). Upstream timeout 15 s. All three answer 200 `{status:1}` (rule 5) with the reason in `x-boxoffice`.
+- CORS is reflected only for origins that belong to an app in Cast List.
+
+## Observability
+
+- Every response has `x-boxoffice: <outcome>` and `server-timing: edge;dur=…, up;dur=…`. Outcomes:
+  loader `served|not_modified`; relay `forwarded|dropped_kids|dropped_no_referer|too_large|rate_limited|
+  upstream_timeout|upstream_error|upstream_<status>|bad_path|bad_method|preflight`; assets `asset_hit|asset_miss|asset_error`.
+- Workers Logs (dashboard → Workers → box-office → Observability): one JSON line per relay/asset request
+  (`event, outcome, app, path, status, ms, upMs`, no IP) plus `catalog_refresh_failed`, `upstream_failed`,
+  `error` with a short stack. Kept 3 days; filter or group by any field.
+- Analytics Engine dataset `box_office`: one point per request (route, outcome, app, method, country, colo,
+  version | status, ms, upstream ms, bytes). No IP, no URL. `npm run metrics [hours]` prints outcomes with
+  p50/p95, forwarded events by app and versions; needs `CLOUDFLARE_API_TOKEN` with Account Analytics: Read
+  (wrangler's login has no analytics scope).
+- `.github/workflows/monitor.yml` runs `scripts/smoke.mjs` against production every 30 minutes; a failure
+  emails the owner. The smoke test sends no real events.
+- `npm run deploy` stamps `VERSION` with the git sha (shown in `/health` and every metric) and runs the smoke test.
+
 ## Run
 
-`npm run up` (dev), `npm test`, `npm run deploy`. Free-plan note: every relay call is a Worker request
-and shares the account's 100k/day with the other Workers.
+`npm run up` (dev), `npm test`, `npm run deploy` (deploy + smoke), `npm run smoke`, `npm run bench`,
+`npm run metrics`. Free-plan note: every relay call is a Worker request and shares the account's 100k/day
+with the other Workers; `x-boxoffice` outcomes and the metrics show which routes spend it.
 
 ## PostHog objects (project 732590)
 

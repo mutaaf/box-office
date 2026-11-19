@@ -1,0 +1,15 @@
+name: Monitor
+# Synthetic check of the live Worker every 30 minutes: health (with upstream probes), loader + 304, kids
+# drop, refused paths, edge-cached assets. Sends no real events. A failure emails the repo owner.
+on:
+  schedule: [{ cron: '7,37 * * * *' }]
+  workflow_dispatch: {}
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node scripts/smoke.mjs
